@@ -30,7 +30,7 @@ func NewHealthCheckHandlerAuth(
 }
 
 func (*HealthCheckHandlerAuth) Pattern() string {
-	return "/healthcheck"
+	return "/healthcheckAuth"
 }
 
 // Handler returns a handler function for the healthcheck endpoint
