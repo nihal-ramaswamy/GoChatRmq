@@ -1,4 +1,5 @@
-CREATE DATABASE go_chat;
+SELECT 'CREATE DATABASE go_chat'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'go_chat')\gexec
 \c go_chat;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

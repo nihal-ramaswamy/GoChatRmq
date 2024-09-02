@@ -60,6 +60,7 @@ func selectAllFromChatWhereUserIdIs(db *sql.DB, id string) ([]dto.Chat, error) {
 	var chats []dto.Chat
 	query := `SELECT SENDER_ID, RECEIVER_ID, MESSAGE, CREATED_AT FROM "CHAT" WHERE SENDER_ID = $1 OR RECEIVER_ID = $1`
 	rows, err := db.Query(query, id)
+	defer rows.Close()
 	if err != nil {
 		return chats, err
 	}

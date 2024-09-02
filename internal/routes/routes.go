@@ -27,7 +27,7 @@ func NewRoutes(
 	websocketMap *dto.WebsocketConnectionMap,
 ) {
 	serverGroupHandlers := []dto.ServerGroupInterface{
-		healthcheck_api.NewHealthCheckGroup(),
+		healthcheck_api.NewHealthCheckGroup(pdb, rdb_auth, ctx, log),
 		auth_api.NewAuthGroup(pdb, rdb_auth, ctx, log),
 		chat_api.NewChatGroup(pdb, rdb_auth, ctx, log, amqpConfig, upgrader, websocketMap),
 	}
