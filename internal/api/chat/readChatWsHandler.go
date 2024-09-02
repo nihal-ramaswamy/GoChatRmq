@@ -115,7 +115,10 @@ func (r *ReadChatWsHandler) Handler() gin.HandlerFunc {
 			var forever chan struct{}
 			go func() {
 				for d := range msgs {
-					conn.Conn.WriteMessage(websocket.TextMessage, d.Body)
+					err := conn.Conn.WriteMessage(websocket.TextMessage, d.Body)
+					if err != nil {
+						r.log.Error("Error writing message to websocket", zap.Error(err))
+					}
 				}
 			}()
 			<-forever

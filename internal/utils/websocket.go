@@ -13,7 +13,7 @@ func CreateNewConnection(
 	id string,
 ) error {
 	data, exists := websocketConnectionMap.Get(id)
-	if exists == true && data.Active {
+	if exists && data.Active {
 		return nil
 	}
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

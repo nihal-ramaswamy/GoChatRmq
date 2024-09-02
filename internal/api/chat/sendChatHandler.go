@@ -109,8 +109,9 @@ func (c *SendChatHandler) Handler() gin.HandlerFunc {
 
 		// Send to rmq queue
 		var wg sync.WaitGroup
+		wg.Add(1)
+
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
@@ -129,6 +130,9 @@ func (c *SendChatHandler) Handler() gin.HandlerFunc {
 					ContentType: "text/plain",
 					Body:        body,
 				})
+			if err != nil {
+				c.log.Error("Error publishing message", zap.Error(err))
+			}
 		}()
 
 		wg.Wait()
