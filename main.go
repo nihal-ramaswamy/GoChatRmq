@@ -8,16 +8,13 @@ import (
 	"github.com/nihal-ramaswamy/GoChat/internal/server"
 	"github.com/nihal-ramaswamy/GoChat/internal/utils"
 	"go.uber.org/fx"
-	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 )
 
 func main() {
 	fx.New(
-		fx.Provide(utils.NewLogger),
-		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
-			return &fxevent.ZapLogger{Logger: log}
-		}),
+		fx.Provide(utils.NewZapLogger),
+		utils.FxLogger(),
 
 		fx_utils.WebsocketModule,
 
