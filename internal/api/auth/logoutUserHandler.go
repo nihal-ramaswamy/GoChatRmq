@@ -43,6 +43,17 @@ func (*LogoutUserHandler) RequestMethod() string {
 	return constants.POST
 }
 
+// Handler to logout a user
+// POST /auth/signout
+//
+//	Request Header: {
+//	  "Token": Bearer token,
+//	  }
+//
+//	  Response:
+//	  202 Accepted: {
+//	  "message": ok
+//	  }
 func (l *LogoutUserHandler) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.GetString("email")

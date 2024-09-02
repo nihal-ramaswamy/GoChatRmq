@@ -30,6 +30,23 @@ func (*NewUserHandler) Pattern() string {
 	return "/register"
 }
 
+// Handler creates a new user in the database
+// POST /auth/register
+//
+//	Request Body: {
+//	  "email": email,
+//	  "password": password,
+//	  "name": name
+//	  }
+//
+// Response:
+//
+//	202 Accepted: {
+//	 "id": id
+//	 }
+//	 400 Bad Request: {
+//	 "error": "User with email %s already exists"
+//	 }
 func (n *NewUserHandler) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := dto.NewUser()

@@ -29,6 +29,23 @@ func (r *ReadChatDbHandler) Pattern() string {
 	return "/read"
 }
 
+// Handler reads chat for a user from DB
+// GET /chat/read
+//
+//	Request Header: {
+//	  "Token": Bearer token,
+//	  }
+//
+// Response:
+//
+//	200 OK: {
+//	 "messages": [{
+//	 "senderId": senderId,
+//	 "receiverId": receiverId,
+//	 "message": message,
+//	 "timestamp": timestamp
+//	 }]
+//	 }
 func (r *ReadChatDbHandler) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.GetString("email")

@@ -47,6 +47,29 @@ func (*LoginUserHandler) RequestMethod() string {
 	return constants.POST
 }
 
+// Hanlder to authenticate a user
+// POST /auth/signin
+//
+//	Request Body: {
+//	  "email": email,
+//	  "password": password
+//	  }
+//
+//	  Response:
+//	  202 Accepted: {
+//	  "token": token
+//	  }
+//	  401 Unauthorized: {
+//	  "error": "Invalid credentials"
+//	  }
+//	  401 Unauthorized: {
+//	  "error": "User with email %s does not exist"
+//	  }
+//	  500 Internal Server Error: {
+//	  "error": "Internal Server Error"
+//	  }
+//	  400 Bad Request: {
+//	  }
 func (l *LoginUserHandler) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := dto.NewUser()

@@ -50,6 +50,29 @@ func (c *SendChatHandler) Middlewares() []gin.HandlerFunc {
 	return c.middlewares
 }
 
+// Handler to send a chat
+// POST /chat/chat
+//
+//	Request Body: {
+//	 "receiverId": receiverId,
+//	 "message": message
+//	 }
+//	 Response:
+//	 200 OK: {
+//	 "message": "Chat sent"
+//	 }
+//	 400 Bad Request: {
+//	 "error": "Error reading payload"
+//	 }
+//	 500 Internal Server Error: {
+//	 "error": "Error getting user from email"
+//	 }
+//	 500 Internal Server Error: {
+//	 "error": "Error saving chat"
+//	 }
+//	 500 Internal Server Error: {
+//	 "error": "Error marshalling chat"
+//	 }
 func (c *SendChatHandler) Handler() gin.HandlerFunc {
 	return func(ginCtx *gin.Context) {
 		email := ginCtx.GetString("email")

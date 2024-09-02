@@ -44,6 +44,19 @@ func (r *ReadChatWsHandler) Pattern() string {
 	return "/ws"
 }
 
+// Handler to read chat for a user from queue. Opens a websocket connection
+// GET ws://HOST:PORT/chat/ws
+//
+//	Request Header: {
+//	  "Token": Bearer token,
+//	  }
+//
+//	Message: {
+//	  "senderId": senderId,
+//	  "receiverId": receiverId,
+//	  "message": message,
+//	  "timestamp": timestamp
+//	  }
 func (r *ReadChatWsHandler) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.GetString("email")

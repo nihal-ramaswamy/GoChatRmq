@@ -23,6 +23,14 @@ func (*HealthCheckHandler) Pattern() string {
 	return "/healthcheck"
 }
 
+// Handler returns a handler function for the healthcheck endpoint
+// GET /healthcheck/healthcheck
+//
+// Response Body:
+//
+//	200 OK: {
+//		"message": "ok"
+//		}
 func (*HealthCheckHandler) Handler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
