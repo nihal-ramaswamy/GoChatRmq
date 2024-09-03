@@ -55,6 +55,7 @@ func (n *NewUserHandler) Handler() gin.HandlerFunc {
 			err := c.Error(err)
 			n.log.Info("Responding with error", zap.Error(err))
 			c.AbortWithStatus(http.StatusBadRequest)
+			return
 		}
 
 		if db.DoesEmailExist(n.db, user.Email) {
@@ -62,6 +63,7 @@ func (n *NewUserHandler) Handler() gin.HandlerFunc {
 				gin.H{
 					"error": fmt.Sprintf("User with email %s already exists", user.Email),
 				})
+			return
 		}
 
 		id := db.RegisterNewUser(n.db, user, n.log)
