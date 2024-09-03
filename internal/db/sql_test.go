@@ -3,10 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"sync"
 	"testing"
 
@@ -104,46 +101,18 @@ func runChatTest(t *testing.T, db *sql.DB) {
 // 2. Selecting a user name from the database
 // 3. Selecting the password of a user
 func TestUser(t *testing.T) {
-	testConfig := utils.GetDbConfig()
 	ctx := context.Background()
-
-	pwd, err := os.Getwd()
-	// Go up two directories
-	rootDir := filepath.Dir(filepath.Dir(pwd))
-
+	container, db, err := utils.SetUpPostgresForTesting(ctx)
 	if err != nil {
-		t.Fatalf("failed to get working directory: %s", err)
+		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
 
-	container, err := utils.GetPostgresContainer(testConfig, rootDir, ctx)
-	if err != nil {
-		t.Fatalf("failed to start container, %s", err)
-	}
-
-	// Clean up the container
-	defer func() {
+	t.Cleanup(func() {
 		if err := container.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
-	}()
-
-	dbURL, err := container.ConnectionString(ctx, "sslmode=disable")
-	fmt.Println(dbURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	db, err := sql.Open("postgres", dbURL)
-	t.Cleanup(func() { db.Close() })
-
-	if err != nil {
-		t.Fatalf("Error opening connection: %s", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		t.Fatalf("Error pinging db: %s", err)
-	}
+		db.Close()
+	})
 
 	var wg sync.WaitGroup
 	for range 10 {
@@ -158,46 +127,18 @@ func TestUser(t *testing.T) {
 
 // Tests inserting a chat into the database and selecting all chats for each user
 func TestChat(t *testing.T) {
-	testConfig := utils.GetDbConfig()
 	ctx := context.Background()
-
-	pwd, err := os.Getwd()
-	// Go up two directories
-	rootDir := filepath.Dir(filepath.Dir(pwd))
-
+	container, db, err := utils.SetUpPostgresForTesting(ctx)
 	if err != nil {
-		t.Fatalf("failed to get working directory: %s", err)
+		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
 
-	container, err := utils.GetPostgresContainer(testConfig, rootDir, ctx)
-	if err != nil {
-		t.Fatalf("failed to start container, %s", err)
-	}
-
-	// Clean up the container
-	defer func() {
+	t.Cleanup(func() {
 		if err := container.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
-	}()
-
-	dbURL, err := container.ConnectionString(ctx, "sslmode=disable")
-	fmt.Println(dbURL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	db, err := sql.Open("postgres", dbURL)
-	t.Cleanup(func() { db.Close() })
-
-	if err != nil {
-		t.Fatalf("Error opening connection: %s", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		t.Fatalf("Error pinging db: %s", err)
-	}
+		db.Close()
+	})
 
 	runChatTest(t, db)
 }

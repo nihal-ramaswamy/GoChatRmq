@@ -2,7 +2,10 @@ package utils
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -59,4 +62,35 @@ func FilterChatsByUserId(chats []*dto.Chat, userId string) int {
 		}
 	}
 	return count
+}
+
+func SetUpPostgresForTesting(ctx context.Context) (*postgres.PostgresContainer, *sql.DB, error) {
+	testConfig := GetDbConfig()
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get working directory: %s", err)
+	}
+	rootDir := filepath.Join(wd, "..", "..")
+
+	container, err := GetPostgresContainer(testConfig, rootDir, ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get postgres container: %s", err)
+	}
+
+	dbURL, err := container.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get connection string: %s", err)
+	}
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open connection: %s", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to ping db: %s", err)
+	}
+
+	return container, db, nil
 }
