@@ -7,3 +7,7 @@ type IdDto struct {
 type ErrorDto struct {
 	Error string `json:"error"`
 }
+
+type TokenDto struct {
+	Token string `json:"token"`
+}
