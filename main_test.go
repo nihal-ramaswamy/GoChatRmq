@@ -31,9 +31,22 @@ func TestHealthcheck(t *testing.T) {
 	})
 
 	rabbitmqContainer, _, err := utils.SetUpRabbitMqForTesting(ctx)
+	if err != nil {
+		t.Fatalf("Error setting up rabbitmq for testing: %s", err)
+	}
 
 	t.Cleanup(func() {
 		if err := rabbitmqContainer.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate container: %s", err)
+		}
+	})
+
+	redisContainer, _, err := utils.SetUpRedisForTesting(ctx)
+	if err != nil {
+		t.Fatalf("Error setting up redis for testing: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := redisContainer.Terminate(ctx); err != nil {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
 	})

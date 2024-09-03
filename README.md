@@ -22,3 +22,6 @@ Start the server using the `docker-compose.yaml` command file.
 - Once the user is logged in, they can send messages by hitting the HTTP endpoint documented inside [API](./internal/api/chat/) folder.
 - This saves the message in the database and also sends the message to the RabbitMQ queue with ID as the receiver's ID.
 - The receiver can either read messages from the DB or listen to the RabbitMQ queue for new messages.
+
+## Testing 
+Tests are written using [testContainer](https://testcontainers.com). Ensure docker is running before running the tests.
