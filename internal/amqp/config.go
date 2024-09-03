@@ -15,14 +15,14 @@ type AmqpConfig struct {
 	Queue   amqp.Queue
 }
 
-func NewAmqpConfig(host string) *AmqpConfig {
+func NewAmqpConfig(host string) (*AmqpConfig, error) {
 	conn, err := amqp.Dial(host)
 	if err != nil {
 		panic(fmt.Errorf("Failed to connect to RabbitMQ: %s", err))
 	}
 	ch, err := conn.Channel()
 	if err != nil {
-		panic(fmt.Errorf("Failed to open channel: %s", err))
+		return nil, fmt.Errorf("Failed to open channel: %s", err)
 	}
 
 	err = ch.ExchangeDeclare(
@@ -34,7 +34,7 @@ func NewAmqpConfig(host string) *AmqpConfig {
 		false,
 		nil)
 	if err != nil {
-		panic(fmt.Errorf("Failed to declare exchange: %s", err))
+		return nil, fmt.Errorf("Failed to declare exchange: %s", err)
 	}
 
 	queue, err := ch.QueueDeclare(
@@ -54,10 +54,14 @@ func NewAmqpConfig(host string) *AmqpConfig {
 		Conn:    conn,
 		Channel: ch,
 		Queue:   queue,
-	}
+	}, nil
 }
 
 func DefaultAmqpConfig() *AmqpConfig {
 	// return NewAmqpConfig(utils.GetDotEnvVariable(constants.RABBITMQ_HOST))
-	return NewAmqpConfig(utils.GetDotEnvVariable(constants.RABBITMQ_HOST))
+	config, err := NewAmqpConfig(utils.GetDotEnvVariable(constants.RABBITMQ_HOST))
+	if err != nil {
+		panic(fmt.Errorf("Failed to get amqp config: %s", err))
+	}
+	return config
 }

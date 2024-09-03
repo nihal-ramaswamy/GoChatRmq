@@ -12,14 +12,14 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/nihal-ramaswamy/GoChat/internal/dto"
-	"github.com/nihal-ramaswamy/GoChat/internal/utils"
+	"github.com/nihal-ramaswamy/GoChat/internal/testUtils"
 )
 
 func runUserTest(t *testing.T, db *sql.DB) {
 	user := &dto.User{
-		Name:     utils.RandStringRunes(10),
-		Email:    utils.RandStringRunes(10),
-		Password: utils.RandStringRunes(10),
+		Name:     testUtils.RandStringRunes(10),
+		Email:    testUtils.RandStringRunes(10),
+		Password: testUtils.RandStringRunes(10),
 	}
 
 	_, err := insertIntoUser(db, user)
@@ -47,7 +47,7 @@ func runUserTest(t *testing.T, db *sql.DB) {
 func runChatTest(t *testing.T, db *sql.DB) {
 	userIds := []string{}
 	for range 5 {
-		userIds = append(userIds, utils.RandStringRunes(10))
+		userIds = append(userIds, testUtils.RandStringRunes(10))
 	}
 	chats := []*dto.Chat{}
 
@@ -60,7 +60,7 @@ func runChatTest(t *testing.T, db *sql.DB) {
 		chatDto := &dto.Chat{
 			SenderId:   userIds[rand.Intn(len(userIds))],
 			ReceiverId: userIds[rand.Intn(len(userIds))],
-			Message:    utils.RandStringRunes(10),
+			Message:    testUtils.RandStringRunes(10),
 		}
 		chats = append(chats, chatDto)
 	}
@@ -89,7 +89,7 @@ func runChatTest(t *testing.T, db *sql.DB) {
 				t.Fatalf("Error selecting chats: %s", err)
 			}
 
-			expectedChats := utils.FilterChatsByUserId(chats, userId)
+			expectedChats := testUtils.FilterChatsByUserId(chats, userId)
 			if len(chatsFromDB) != expectedChats {
 				t.Fatalf("Expected %d chats, got %d", expectedChats, len(chatsFromDB))
 			}
@@ -112,7 +112,7 @@ func TestUser(t *testing.T) {
 	rootDir := filepath.Join(wd, "..", "..")
 	fmt.Println(rootDir)
 
-	container, db, err := utils.SetUpPostgresForTesting(ctx, rootDir)
+	container, db, err := testUtils.SetUpPostgresForTesting(ctx, rootDir)
 	if err != nil {
 		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
@@ -145,7 +145,7 @@ func TestChat(t *testing.T) {
 	rootDir := filepath.Join(wd, "..", "..")
 	fmt.Println(rootDir)
 
-	container, db, err := utils.SetUpPostgresForTesting(ctx, rootDir)
+	container, db, err := testUtils.SetUpPostgresForTesting(ctx, rootDir)
 	if err != nil {
 		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}

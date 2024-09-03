@@ -5,7 +5,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"github.com/nihal-ramaswamy/GoChat/internal/constants"
+	"github.com/nihal-ramaswamy/GoChat/internal/dto"
+	"github.com/nihal-ramaswamy/GoChat/internal/fx_utils"
+	"github.com/nihal-ramaswamy/GoChat/internal/routes"
+	"github.com/nihal-ramaswamy/GoChat/internal/testUtils"
 	"github.com/nihal-ramaswamy/GoChat/internal/utils"
 )
 
@@ -18,7 +24,7 @@ func TestHealthcheck(t *testing.T) {
 		t.Fatalf("Error getting working directory: %s", err)
 	}
 
-	postgresContainer, db, err := utils.SetUpPostgresForTesting(ctx, rootDir)
+	postgresContainer, db, err := testUtils.SetUpPostgresForTesting(ctx, rootDir)
 	if err != nil {
 		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
@@ -30,7 +36,7 @@ func TestHealthcheck(t *testing.T) {
 		db.Close()
 	})
 
-	rabbitmqContainer, _, err := utils.SetUpRabbitMqForTesting(ctx)
+	rabbitmqContainer, amqpConfig, err := testUtils.SetUpRabbitMqForTesting(ctx)
 	if err != nil {
 		t.Fatalf("Error setting up rabbitmq for testing: %s", err)
 	}
@@ -41,7 +47,7 @@ func TestHealthcheck(t *testing.T) {
 		}
 	})
 
-	redisContainer, _, err := utils.SetUpRedisForTesting(ctx)
+	redisContainer, rdb, err := testUtils.SetUpRedisForTesting(ctx)
 	if err != nil {
 		t.Fatalf("Error setting up redis for testing: %s", err)
 	}
@@ -50,4 +56,15 @@ func TestHealthcheck(t *testing.T) {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
 	})
+
+	upgrader := fx_utils.NewWebsocketUpgrader()
+	webscoketMap := dto.NewWebsocketConnectionMap()
+
+	os.Setenv(constants.ENV, "test")
+	log := utils.NewZapLogger()
+
+	gin.SetMode(gin.TestMode)
+	server := gin.Default()
+
+	routes.NewRoutes(server, db, rdb, ctx, log, amqpConfig, upgrader, webscoketMap)
 }
