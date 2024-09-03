@@ -3,7 +3,10 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
@@ -102,7 +105,14 @@ func runChatTest(t *testing.T, db *sql.DB) {
 // 3. Selecting the password of a user
 func TestUser(t *testing.T) {
 	ctx := context.Background()
-	container, db, err := utils.SetUpPostgresForTesting(ctx)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Error getting working directory: %s", err)
+	}
+	rootDir := filepath.Join(wd, "..", "..")
+	fmt.Println(rootDir)
+
+	container, db, err := utils.SetUpPostgresForTesting(ctx, rootDir)
 	if err != nil {
 		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
@@ -128,7 +138,14 @@ func TestUser(t *testing.T) {
 // Tests inserting a chat into the database and selecting all chats for each user
 func TestChat(t *testing.T) {
 	ctx := context.Background()
-	container, db, err := utils.SetUpPostgresForTesting(ctx)
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Error getting working directory: %s", err)
+	}
+	rootDir := filepath.Join(wd, "..", "..")
+	fmt.Println(rootDir)
+
+	container, db, err := utils.SetUpPostgresForTesting(ctx, rootDir)
 	if err != nil {
 		t.Fatalf("Error setting up postgres for testing: %s", err)
 	}
