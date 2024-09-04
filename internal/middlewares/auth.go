@@ -26,12 +26,18 @@ func AuthMiddleware(
 
 	return func(c *gin.Context) {
 		token := c.GetHeader("token")
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				gin.H{"error": "Invalid token. Token should be 'Bearer <Token>'"})
+			return
+		}
 		splitToken := strings.Split(token, constants.BEARER)
 		token = splitToken[1]
 
 		if len(splitToken) != 2 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized,
 				gin.H{"error": "Invalid token. Token should be 'Bearer <Token>'"})
+			return
 		}
 
 		parsedToken, err := jwt.Parse(
