@@ -16,7 +16,7 @@ func NewZapLogger() *zap.Logger {
 	case "debug":
 		return zap.Must(zap.NewDevelopment())
 	default:
-		return zap.Must(zap.NewDevelopment())
+		return zap.NewNop()
 	}
 }
 

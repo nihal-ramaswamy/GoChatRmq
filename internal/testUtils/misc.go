@@ -3,10 +3,13 @@ package testUtils
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/nihal-ramaswamy/GoChat/internal/constants"
 	"github.com/nihal-ramaswamy/GoChat/internal/dto"
 	"github.com/nihal-ramaswamy/GoChat/internal/fx_utils"
@@ -66,4 +69,19 @@ func SetUpRouter(rootDir string, ctx context.Context) (*TestConfig, error) {
 		Upgrader:          upgrader,
 		WebsocketMap:      webscoketMap,
 	}, nil
+}
+
+// LoadEnv loads env vars from .env
+func LoadEnv() {
+	projectDirName := "go_chat"
+	re := regexp.MustCompile(`^(.*` + projectDirName + `)`)
+	cwd, _ := os.Getwd()
+	rootPath := re.Find([]byte(cwd))
+
+	err := godotenv.Load(string(rootPath) + `/.env`)
+	if err != nil {
+		log.Fatalln("Problem loading .env file")
+
+		os.Exit(-1)
+	}
 }
