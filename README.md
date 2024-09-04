@@ -6,6 +6,7 @@ Go chat application using Redis and RabbitMQ.
 - [Setup](#setup)
 - [Running](#running)
 - [Internal Working](#internal-working)
+- [Testing](#testing)
 
 ## Installation 
 Ensure you have Docker installed on your machine.
@@ -25,3 +26,9 @@ Start the server using the `docker-compose.yaml` command file.
 
 ## Testing 
 Tests are written using [testContainer](https://testcontainers.com). Ensure docker is running before running the tests.
+### Running Tests
+First make the `.env.test` file based on the instructions inside the `.env.example` file. Then run the below command.
+```bash
+ENVIRONMENT=test go test ./... -v -cover
+```
+
