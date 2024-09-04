@@ -1,4 +1,4 @@
-package db
+package db_test
 
 import (
 	"context"
@@ -11,8 +11,10 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	query "github.com/nihal-ramaswamy/GoChat/internal/db"
 	"github.com/nihal-ramaswamy/GoChat/internal/dto"
 	"github.com/nihal-ramaswamy/GoChat/internal/testUtils"
+	"go.uber.org/zap"
 )
 
 func runUserTest(t *testing.T, db *sql.DB) {
@@ -22,12 +24,13 @@ func runUserTest(t *testing.T, db *sql.DB) {
 		Password: testUtils.RandStringRunes(10),
 	}
 
-	_, err := insertIntoUser(db, user)
+	log, err := zap.NewDevelopment()
 	if err != nil {
-		t.Fatalf("Error inserting user: %s", err)
+		t.Fatalf("Error creating zap logger: %s", err)
 	}
+	_ = query.RegisterNewUser(db, user, log)
 
-	userFromDB, err := selectAllFromUserWhereEmailIs(db, user.Email)
+	userFromDB, err := query.GetUserFromEmail(db, user.Email)
 	if err != nil {
 		t.Fatalf("Error selecting user: %s", err)
 	}
@@ -35,12 +38,9 @@ func runUserTest(t *testing.T, db *sql.DB) {
 		t.Fatalf("Expected %s, got %s", user.Name, userFromDB.Name)
 	}
 
-	pass, err := selectPasswordFromUserWhereEmailIDs(db, user.Email)
-	if err != nil {
-		t.Fatalf("Error selecting password: %s", err)
-	}
-	if pass != user.Password {
-		t.Fatalf("Expected %s, got %s", user.Password, pass)
+	pass := query.DoesPasswordMatch(db, user, log)
+	if pass {
+		t.Fatalf("Error matching password. Expected no match")
 	}
 }
 
@@ -71,7 +71,7 @@ func runChatTest(t *testing.T, db *sql.DB) {
 		wg.Add(1)
 		go func(chat *dto.Chat) {
 			defer wg.Done()
-			err := insertIntoChat(db, chat)
+			err := query.SaveChat(db, chat)
 			if err != nil {
 				t.Fatalf("Error inserting chat: %s", err)
 			}
@@ -84,7 +84,7 @@ func runChatTest(t *testing.T, db *sql.DB) {
 
 		go func(userId string) {
 			defer wg.Done()
-			chatsFromDB, err := selectAllFromChatWhereUserIdIs(db, userId)
+			chatsFromDB, err := query.ReadChatForUser(db, userId)
 			if err != nil {
 				t.Fatalf("Error selecting chats: %s", err)
 			}
@@ -159,3 +159,45 @@ func TestChat(t *testing.T) {
 
 	runChatTest(t, db)
 }
+
+// Tests password encryption and decryption
+// func TestPassword(t *testing.T) {
+// 	userDto := &dto.User{
+// 		Name:     testUtils.RandStringRunes(10),
+// 		Email:    testUtils.RandStringRunes(10),
+// 		Password: testUtils.RandStringRunes(10),
+// 	}
+// 	ctx := context.Background()
+// 	wd, err := os.Getwd()
+// 	if err != nil {
+// 		t.Fatalf("Error getting working directory: %s", err)
+// 	}
+//
+// 	rootDir := filepath.Join(wd, "..", "..")
+// 	container, db, err := testUtils.SetUpPostgresForTesting(ctx, rootDir)
+// 	if err != nil {
+// 		t.Fatalf("Error setting up postgres for testing: %s", err)
+// 	}
+//
+// 	t.Cleanup(func() {
+// 		if err := container.Terminate(ctx); err != nil {
+// 			t.Fatalf("failed to terminate container: %s", err)
+// 		}
+// 		db.Close()
+// 	})
+//
+// 	log, err := zap.NewDevelopment()
+// 	if err != nil {
+// 		t.Fatalf("Error creating zap logger: %s", err)
+// 	}
+// 	RegisterNewUser(db, userDto, log)
+//
+// 	if !DoesPasswordMatch(db, userDto, log) {
+// 		t.Fatalf("Error matching password. Expected match")
+// 	}
+//
+// 	userDto.Password = testUtils.RandStringRunes(11)
+// 	if DoesPasswordMatch(db, userDto, log) {
+// 		t.Fatalf("Error matching password. Expected no match")
+// 	}
+// }

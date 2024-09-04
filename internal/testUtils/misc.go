@@ -1,9 +1,16 @@
 package testUtils
 
 import (
+	"context"
+	"fmt"
 	"math/rand"
+	"os"
 
+	"github.com/gin-gonic/gin"
+	"github.com/nihal-ramaswamy/GoChat/internal/constants"
 	"github.com/nihal-ramaswamy/GoChat/internal/dto"
+	"github.com/nihal-ramaswamy/GoChat/internal/fx_utils"
+	"github.com/nihal-ramaswamy/GoChat/internal/utils"
 )
 
 func RandStringRunes(n int) string {
@@ -24,4 +31,39 @@ func FilterChatsByUserId(chats []*dto.Chat, userId string) int {
 		}
 	}
 	return count
+}
+
+func SetUpRouter(rootDir string, ctx context.Context) (*TestConfig, error) {
+	postgresContainer, db, err := SetUpPostgresForTesting(ctx, rootDir)
+	if err != nil {
+		return nil, fmt.Errorf("PostgresContainer error: %s", err)
+	}
+
+	rabbitmqContainer, amqpConfig, err := SetUpRabbitMqForTesting(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("RabbitmqContainer Error: %s", err)
+	}
+
+	redisContainer, rdb, err := SetUpRedisForTesting(ctx)
+	upgrader := fx_utils.NewWebsocketUpgrader()
+	webscoketMap := dto.NewWebsocketConnectionMap()
+
+	os.Setenv(constants.ENV, "test")
+	log := utils.NewZapLogger()
+
+	gin.SetMode(gin.TestMode)
+	server := gin.Default()
+
+	return &TestConfig{
+		PostgresContainer: postgresContainer,
+		Db:                db,
+		RabbitmqContainer: rabbitmqContainer,
+		AmqpConfig:        amqpConfig,
+		RedisContainer:    redisContainer,
+		Rdb:               rdb,
+		Server:            server,
+		Log:               log,
+		Upgrader:          upgrader,
+		WebsocketMap:      webscoketMap,
+	}, nil
 }

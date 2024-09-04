@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,92 +11,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	_ "github.com/lib/pq"
-	amqpConfig "github.com/nihal-ramaswamy/GoChat/internal/amqp"
-	"github.com/nihal-ramaswamy/GoChat/internal/constants"
 	"github.com/nihal-ramaswamy/GoChat/internal/dto"
-	"github.com/nihal-ramaswamy/GoChat/internal/fx_utils"
 	"github.com/nihal-ramaswamy/GoChat/internal/routes"
 	"github.com/nihal-ramaswamy/GoChat/internal/testUtils"
-	"github.com/nihal-ramaswamy/GoChat/internal/utils"
-	rdb "github.com/redis/go-redis/v9"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/modules/rabbitmq"
-	"github.com/testcontainers/testcontainers-go/modules/redis"
-	"go.uber.org/zap"
 )
-
-type TestConfig struct {
-	PostgresContainer *postgres.PostgresContainer
-	Db                *sql.DB
-	RabbitmqContainer *rabbitmq.RabbitMQContainer
-	AmqpConfig        *amqpConfig.AmqpConfig
-	RedisContainer    *redis.RedisContainer
-	Rdb               *rdb.Client
-	Server            *gin.Engine
-	Log               *zap.Logger
-	Upgrader          *websocket.Upgrader
-	WebsocketMap      *dto.WebsocketConnectionMap
-}
-
-func readFromUserDb(db *sql.DB, email string) (int, error) {
-	cnt := 0
-	query := `SELECT COUNT(*) FROM "USER" WHERE EMAIL = $1`
-	err := db.QueryRow(query, email).Scan(&cnt)
-	if err != nil {
-		return -1, err
-	}
-	return cnt, err
-}
-
-func readFromRedis(rdb *rdb.Client, key string) (bool, string, error) {
-	exists := rdb.Exists(context.Background(), key).Val()
-	if exists == 0 {
-		return false, "", nil
-	}
-	val, err := rdb.Get(context.Background(), key).Result()
-	if err != nil {
-		return true, "", err
-	}
-	return true, val, nil
-}
-
-func setUpRouter(rootDir string, ctx context.Context) (*TestConfig, error) {
-	postgresContainer, db, err := testUtils.SetUpPostgresForTesting(ctx, rootDir)
-	if err != nil {
-		return nil, fmt.Errorf("PostgresContainer error: %s", err)
-	}
-
-	rabbitmqContainer, amqpConfig, err := testUtils.SetUpRabbitMqForTesting(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("RabbitmqContainer Error: %s", err)
-	}
-
-	redisContainer, rdb, err := testUtils.SetUpRedisForTesting(ctx)
-	upgrader := fx_utils.NewWebsocketUpgrader()
-	webscoketMap := dto.NewWebsocketConnectionMap()
-
-	os.Setenv(constants.ENV, "test")
-	log := utils.NewZapLogger()
-
-	gin.SetMode(gin.TestMode)
-	server := gin.Default()
-
-	return &TestConfig{
-		PostgresContainer: postgresContainer,
-		Db:                db,
-		RabbitmqContainer: rabbitmqContainer,
-		AmqpConfig:        amqpConfig,
-		RedisContainer:    redisContainer,
-		Rdb:               rdb,
-		Server:            server,
-		Log:               log,
-		Upgrader:          upgrader,
-		WebsocketMap:      webscoketMap,
-	}, nil
-}
 
 // Test /healthcheck/healtcheck
 func TestHealthcheck(t *testing.T) {
@@ -108,7 +26,7 @@ func TestHealthcheck(t *testing.T) {
 		t.Fatalf("Error getting working directory: %s", err)
 	}
 
-	testConfig, err := setUpRouter(rootDir, ctx)
+	testConfig, err := testUtils.SetUpRouter(rootDir, ctx)
 	if err != nil {
 		t.Fatalf("Error setting up server for testing: %s", err)
 	}
@@ -167,7 +85,7 @@ func TestAuthRegister(t *testing.T) {
 		t.Fatalf("Error getting working directory: %s", err)
 	}
 
-	testConfig, err := setUpRouter(rootDir, ctx)
+	testConfig, err := testUtils.SetUpRouter(rootDir, ctx)
 	if err != nil {
 		t.Fatalf("Error setting up server for testing: %s", err)
 	}
@@ -234,7 +152,7 @@ func TestAuthRegister(t *testing.T) {
 		t.Errorf("Expected id, got empty string")
 	}
 
-	cnt, err := readFromUserDb(testConfig.Db, userDto.Email)
+	cnt, err := testUtils.ReadFromUserDb(testConfig.Db, userDto.Email)
 	if err != nil {
 		t.Fatalf("Error reading from db: %s", err)
 	}
@@ -293,7 +211,7 @@ func TestAuthRegister(t *testing.T) {
 		t.Errorf("Expected id, got empty string")
 	}
 
-	cnt, err = readFromUserDb(testConfig.Db, userDto.Email)
+	cnt, err = testUtils.ReadFromUserDb(testConfig.Db, userDto.Email)
 	if err != nil {
 		t.Fatalf("Error reading from db: %s", err)
 	}
@@ -312,7 +230,7 @@ func TestLoginLogout(t *testing.T) {
 		t.Fatalf("Error getting working directory: %s", err)
 	}
 
-	testConfig, err := setUpRouter(rootDir, ctx)
+	testConfig, err := testUtils.SetUpRouter(rootDir, ctx)
 	if err != nil {
 		t.Fatalf("Error setting up server for testing: %s", err)
 	}
@@ -402,7 +320,7 @@ func TestLoginLogout(t *testing.T) {
 		t.Errorf("Expected token, got empty string")
 	}
 
-	exists, rdb_val, err := readFromRedis(testConfig.Rdb, userDto.Email)
+	exists, rdb_val, err := testUtils.ReadFromRedis(testConfig.Rdb, userDto.Email)
 	if err != nil {
 		t.Fatalf("Error reading from redis: %s", err)
 	}
@@ -421,7 +339,7 @@ func TestLoginLogout(t *testing.T) {
 		t.Errorf("Expected status code: 202, got %d", w.Code)
 	}
 
-	exists, rdb_val, err = readFromRedis(testConfig.Rdb, userDto.Email)
+	exists, rdb_val, err = testUtils.ReadFromRedis(testConfig.Rdb, userDto.Email)
 	if exists {
 		t.Errorf("Expected token to be deleted, got %s", rdb_val)
 	}

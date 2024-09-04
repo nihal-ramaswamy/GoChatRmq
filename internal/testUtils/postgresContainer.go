@@ -67,3 +67,13 @@ func SetUpPostgresForTesting(ctx context.Context, rootDir string) (*postgres.Pos
 
 	return container, db, nil
 }
+
+func ReadFromUserDb(db *sql.DB, email string) (int, error) {
+	cnt := 0
+	query := `SELECT COUNT(*) FROM "USER" WHERE EMAIL = $1`
+	err := db.QueryRow(query, email).Scan(&cnt)
+	if err != nil {
+		return -1, err
+	}
+	return cnt, err
+}

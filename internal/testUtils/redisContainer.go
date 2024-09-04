@@ -36,3 +36,15 @@ func SetUpRedisForTesting(ctx context.Context) (*redis.RedisContainer, *rdb.Clie
 
 	return redisContainer, rdbConn, nil
 }
+
+func ReadFromRedis(rdb *rdb.Client, key string) (bool, string, error) {
+	exists := rdb.Exists(context.Background(), key).Val()
+	if exists == 0 {
+		return false, "", nil
+	}
+	val, err := rdb.Get(context.Background(), key).Result()
+	if err != nil {
+		return true, "", err
+	}
+	return true, val, nil
+}
